@@ -7,24 +7,29 @@ from payload_builder import build_telemetry_payload
 
 connected_clients = set()
 
-def conectar_krpc():
+ip = '127.0.0.1'
+port = 50000
+
+kappi_ip = '0.0.0.0'
+kappi_port = 27415
+
+def connect_krpc():
     print("2. Intentando conectar a kRPC...")
     print("Conectando a KSP vía kRPC...")
     try:
         client = krpc.connect(
             name='KSP-Bridge',
-            address='127.0.0.1',
-            rpc_port=50000,
+            address=ip,
+            rpc_port=port,
             stream_port=50001
         )
-        print("¡Conexión establecida!")
+        print(f"Conectado a kRPC en {ip}:{port}")
         return client
     except Exception as err:
-        print(f"Fallo total en la conexión: {err}")
+        print(f"Fallo al intentar conectarse: {err}")
         sys.exit(1)
 
 async def broadcast_telemetry(krpc_client):
-    """Equivalente al setInterval de 500ms de Node"""
     while True:
         await asyncio.sleep(0.1)
         print("Running Async Interval")
@@ -49,41 +54,40 @@ async def broadcast_telemetry(krpc_client):
             websockets.broadcast(connected_clients, buffer)
 
         except Exception as error:
-            print(f"Error leyendo telemetría de KSP: {error}")
+            print(f"Error al parsear telemetría: {error}")
             for ws in list(connected_clients):
                 await ws.close()
             sys.exit(1)
 
 async def ws_handler(websocket):
     connected_clients.add(websocket)
-    print(f"¡Nuevo cliente conectado! Clientes totales: {len(connected_clients)}")
+    print(f"+Cliente, conectados: {len(connected_clients)}")
     
     try:
         await websocket.wait_closed()
     finally:
         connected_clients.remove(websocket)
-        print(f"Cliente desconectado. Clientes totales: {len(connected_clients)}")
+        print(f"-Cliente, conectados: {len(connected_clients)}")
 
-async def iniciar_bridge():
+async def start_bridge():
     try:
         print("1. Cargando Proto...")
 
-        krpc_client = conectar_krpc()
+        krpc_client = connect_krpc()
         print("¡Conexión con KSP establecida!")
 
-        server = await websockets.serve(ws_handler, "0.0.0.0", 27415)
+        server = await websockets.serve(ws_handler, kappi_ip, kappi_port)
         
         print("4. Servidor WebSocket levantado.")
-        print("Bridge escuchando en el puerto 8080...")
+        print(f"Bridge abierto en ws://{kappi_ip}:{kappi_port}")
 
         asyncio.create_task(broadcast_telemetry(krpc_client))
 
         await asyncio.Future()
 
     except Exception as e:
-        print(f"\n[ERROR CRÍTICO]: {e}")
-        print("Revisa que KSP esté abierto y el servidor kRPC en 'Running'.")
+        print(f"\n[ERROR]: {e}")
         sys.exit(1)
 
 if __name__ == "__main__": 
-    asyncio.run(iniciar_bridge())
+    asyncio.run(start_bridge())
