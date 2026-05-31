@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+// option java_package = "org.example.proto";
+// option java_multiple_files = true;
+
+message KspTelemetry {
+  bool sas = 1;
+  bool rcs = 2;
+  bool com_link = 3;
+  bool landing_gear = 4;
+  bool brakes = 5;
+  bool lights = 6;
+  bool grounded = 7;
+
+  double alt_terrain = 8;
+  double alt_sea_level = 9;
+  double apoapsis = 10;
+  double periapsis = 11;
+  float inclination = 12;
+  float eta_pe = 13;
+  float eta_ap = 14;
+
+  float vel_surface = 15;
+  float vel_orbit = 16;
+  float vel_target = 17;
+  float vel_h_component = 18;
+  float vel_v_component = 19;
+
+  float twr = 20;
+  int32 kerbals_in_vessel = 21;
+  float g_force = 22;
+  float time_elapsed = 23;
+
+  float electric_charge = 24;
+  float monoprop = 25;
+  float oxidizer = 26;
+  float liquid_fuel = 27;
+
+  string current_planet = 28;
+  int32 current_stage = 29;
+}
